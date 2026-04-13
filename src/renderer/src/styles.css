@@ -1,0 +1,280 @@
+:root {
+  color-scheme: dark;
+  font-family: 'Segoe UI', 'Microsoft YaHei UI', sans-serif;
+  background: #1f1f1f;
+  color: #f4f4f4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+  background: #1f1f1f;
+}
+
+body {
+  min-height: 100vh;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.compact-shell {
+  position: relative;
+  min-height: 100vh;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #1f1f1f;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.toolbar__search input {
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid #3e3e3e;
+  background: #262626;
+  color: #f3f3f3;
+  outline: none;
+}
+
+.toolbar__button {
+  min-width: 68px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid #454545;
+  background: #2b2b2b;
+  color: #f0f0f0;
+  cursor: pointer;
+}
+
+.toolbar__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toolbar__settings {
+  position: relative;
+}
+
+.settings-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 10;
+  width: 232px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #414141;
+  background: #252525;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
+}
+
+.settings-panel__group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.settings-panel__label {
+  font-size: 12px;
+  color: #f1f1f1;
+}
+
+.settings-panel small {
+  color: #9d9d9d;
+  font-size: 11px;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid #4d4d4d;
+  width: fit-content;
+}
+
+.segmented__item {
+  min-width: 36px;
+  height: 24px;
+  border: 0;
+  background: #222;
+  color: #b8b8b8;
+  cursor: pointer;
+}
+
+.segmented__item + .segmented__item {
+  border-left: 1px solid #4d4d4d;
+}
+
+.segmented__item--active {
+  background: #3c3c3c;
+  color: #ffffff;
+}
+
+.toggle-pill {
+  min-width: 72px;
+  height: 26px;
+  border: 0;
+  background: #6e3a2e;
+  color: #fff4f0;
+  cursor: pointer;
+}
+
+.toggle-pill--enabled {
+  background: #208f4f;
+  color: #f8fff8;
+}
+
+.settings-check {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: #ececec;
+  user-select: none;
+}
+
+.settings-check input {
+  margin: 0;
+}
+
+.status-strip {
+  min-height: 28px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  border: 1px solid #8e3d31;
+  background: #5b241d;
+  color: #ffd6d0;
+  font-size: 12px;
+}
+
+.status-strip--success {
+  border-color: #2d7a4f;
+  background: #1d4f34;
+  color: #d8ffe8;
+}
+
+.list-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: auto;
+}
+
+.hint-row {
+  min-height: 28px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid #383838;
+  background: #272727;
+  color: #d3d3d3;
+  font-size: 12px;
+}
+
+.hint-row__close {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #4a4a4a;
+  background: #2f2f2f;
+  color: #dfdfdf;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.list-row {
+  min-height: 38px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #313131;
+  cursor: pointer;
+}
+
+.list-row:hover {
+  filter: brightness(1.08);
+}
+
+.list-row--enabled {
+  background: linear-gradient(90deg, rgba(30, 125, 72, 0.42), rgba(30, 125, 72, 0.12));
+}
+
+.list-row--disabled {
+  background: linear-gradient(90deg, rgba(172, 69, 43, 0.42), rgba(172, 69, 43, 0.12));
+}
+
+.list-row__icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #343434;
+  color: #f1f1f1;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.list-row__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.list-row__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.list-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #bdbdbd;
+  text-align: center;
+}
+
+.drop-overlay {
+  position: absolute;
+  inset: 8px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(84, 166, 255, 0.6);
+  background: rgba(18, 32, 52, 0.82);
+  color: #eef6ff;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  pointer-events: none;
+}
