@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import Fuse from 'fuse.js';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 
 import type {
   AppSettings,
@@ -126,6 +127,7 @@ const listShellRef = ref<HTMLElement | null>(null);
 
 let removeForceRefreshListener: (() => void) | null = null;
 let removeSettingsListener: (() => void) | null = null;
+let removeDragDropListener: (() => void) | null = null;
 
 watch(searchText, (value) => {
   localStorage.setItem(SEARCH_STORAGE_KEY, value);
@@ -190,20 +192,18 @@ const visibleItems = computed(() => {
 watch(
   () => visibleItems.value.map((item) => item.id),
   async (ids) => {
-    for (const id of ids) {
-      if (Object.prototype.hasOwnProperty.call(iconUrls.value, id)) {
-        continue;
-      }
-
+    const missingIds = ids.filter((id) => !Object.prototype.hasOwnProperty.call(iconUrls.value, id));
+    if (missingIds.length > 0) {
+      const placeholderMap = Object.fromEntries(missingIds.map((id) => [id, null]));
       iconUrls.value = {
         ...iconUrls.value,
-        [id]: null
+        ...placeholderMap
       };
 
-      const iconDataUrl = await window.startupManager.getStartupItemIcon(id);
+      const loadedIcons = await window.startupManager.getStartupItemIcons(missingIds);
       iconUrls.value = {
         ...iconUrls.value,
-        [id]: iconDataUrl
+        ...loadedIcons
       };
     }
 
@@ -341,11 +341,6 @@ function dismissHint(): void {
   localStorage.setItem(HINT_DISMISSED_STORAGE_KEY, '1');
 }
 
-function extractDroppedPaths(event: DragEvent): string[] {
-  const files = Array.from(event.dataTransfer?.files || []);
-  return window.startupManager.getPathsForDroppedFiles(files);
-}
-
 function summarizeDropEntries(entries: CreateStartupFromDropEntry[]): { tone: BannerTone; message: string } {
   const created = entries.filter((entry) => entry.status === 'created');
   const enabledExisting = entries.filter((entry) => entry.status === 'enabled_existing');
@@ -408,12 +403,10 @@ function summarizeDropEntries(entries: CreateStartupFromDropEntry[]): { tone: Ba
   };
 }
 
-async function handleDrop(event: DragEvent): Promise<void> {
-  event.preventDefault();
+async function handleDrop(paths: string[]): Promise<void> {
   dragDepth.value = 0;
   isDropOverlayVisible.value = false;
 
-  const paths = extractDroppedPaths(event);
   if (paths.length === 0) {
     bannerTone.value = 'info';
     bannerMessage.value = copy.value.dropUnsupported;
@@ -432,39 +425,37 @@ async function handleDrop(event: DragEvent): Promise<void> {
     focusedItemId.value = focusTarget;
   }
 
-  await loadItemsInternal(false);
+  const hasStartupChanges = result.entries.some(
+    (entry) => entry.status === 'created' || entry.status === 'enabled_existing'
+  );
+
+  if (hasStartupChanges) {
+    loading.value = true;
+    try {
+      items.value = await window.startupManager.listStartupItems();
+    } catch {
+      await loadItemsInternal(false);
+    } finally {
+      loading.value = false;
+    }
+  }
+
   await nextTick();
   listShellRef.value?.scrollTo({
     top: 0
   });
 }
 
-function handleDragEnter(event: DragEvent): void {
-  if (!event.dataTransfer?.types.includes('Files')) {
-    return;
-  }
-
-  event.preventDefault();
+function handleDragEnter(): void {
   dragDepth.value += 1;
   isDropOverlayVisible.value = true;
 }
 
-function handleDragOver(event: DragEvent): void {
-  if (!event.dataTransfer?.types.includes('Files')) {
-    return;
-  }
-
-  event.preventDefault();
-  event.dataTransfer.dropEffect = 'copy';
+function handleDragOver(): void {
   isDropOverlayVisible.value = true;
 }
 
-function handleDragLeave(event: DragEvent): void {
-  if (!event.dataTransfer?.types.includes('Files')) {
-    return;
-  }
-
-  event.preventDefault();
+function handleDragLeave(): void {
   dragDepth.value = Math.max(0, dragDepth.value - 1);
   if (dragDepth.value === 0) {
     isDropOverlayVisible.value = false;
@@ -480,6 +471,23 @@ onMounted(async () => {
   removeSettingsListener = window.startupManager.onSettingsUpdated((nextSettings) => {
     settings.value = nextSettings;
   });
+  removeDragDropListener = await getCurrentWebviewWindow().onDragDropEvent((event) => {
+    if (event.payload.type === 'enter') {
+      handleDragEnter();
+      return;
+    }
+    if (event.payload.type === 'over') {
+      handleDragOver();
+      return;
+    }
+    if (event.payload.type === 'drop') {
+      void handleDrop(event.payload.paths);
+      return;
+    }
+    if (event.payload.type === 'leave') {
+      handleDragLeave();
+    }
+  });
 
   await refreshAll();
 });
@@ -488,17 +496,12 @@ onBeforeUnmount(() => {
   document.removeEventListener('mousedown', closeSettingsPanelOnOutsideClick);
   removeForceRefreshListener?.();
   removeSettingsListener?.();
+  removeDragDropListener?.();
 });
 </script>
 
 <template>
-  <main
-    class="compact-shell"
-    @dragenter="handleDragEnter"
-    @dragover="handleDragOver"
-    @dragleave="handleDragLeave"
-    @drop="handleDrop"
-  >
+  <main class="compact-shell">
     <section class="toolbar">
       <label class="toolbar__search">
         <input

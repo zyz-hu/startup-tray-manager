@@ -4,6 +4,7 @@ release/
 dist/
 .idea/
 src-tauri/target/
+src-tauri/gen/
 *.log
 .DS_Store
 Thumbs.db

@@ -80,6 +80,7 @@ export interface StartupManagerApi {
   toggleStartupItem: (payload: ToggleStartupPayload) => Promise<ToggleStartupResult>;
   openStartupItemLocation: (id: string) => Promise<boolean>;
   getStartupItemIcon: (id: string) => Promise<string | null>;
+  getStartupItemIcons: (ids: string[]) => Promise<Record<string, string | null>>;
   createStartupFromDrop: (payload: CreateStartupFromDropPayload) => Promise<CreateStartupFromDropResult>;
   getPathsForDroppedFiles: (files: File[]) => string[];
   getSettings: () => Promise<AppSettings>;

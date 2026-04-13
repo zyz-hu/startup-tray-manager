@@ -32,4 +32,4 @@ npm run dev
 npm run dist
 ```
 
-打包产物会输出到 `release/`，建议上传源码到 GitHub，把 `release/*.exe` 作为 GitHub Release 附件分发。
+打包产物会输出到 `release/`
